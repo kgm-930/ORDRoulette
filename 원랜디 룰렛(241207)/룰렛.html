@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>ORD 룰렛</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="./img/mark.ico" rel="icon" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        /* 좌측 탭 스타일 */
+        #sidebar {
+            width: 200px;
+            background-color: #f4f4f4;
+            border-right: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        #sidebar button {
+            width: 90%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        #sidebar button:hover {
+            background-color: #0056b3;
+        }
+
+        #sidebar button.active {
+            background-color: #0056b3;
+        }
+
+        #main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 탭 기본 스타일 */
+        .tab {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* 활성화된 탭만 보이도록 설정 */
+        .tab.active {
+            display: flex;
+        }
+
+        #roulette-page {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            height: 100%;
+        }
+
+        /* 기존 CSS 유지 */
+        #inputs, #results, #slots {
+            flex: 1;
+            max-width: 400px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #f9f9f9;
+            box-sizing: border-box;
+            height: calc(100vh - 30px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            text-align: center;
+            width: 100%;
+        }
+
+        #inputs {
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        #input-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden; /* 좌우 스크롤 비활성화 */
+            padding-bottom: 10px;
+            width: 100%;
+        }
+
+        .button-group {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 10px;
+        }
+
+        #slot-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            overflow-x: hidden; /* 좌우 스크롤바 비활성화 */
+            max-height: 85%;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            align-items: center;
+        }
+
+        .slot {
+            font-size: 24px;
+            font-weight: bold;
+            width: calc(100% - 20px); /* 슬롯 너비를 컨테이너 크기에 맞게 */
+            min-height: 50px; /* 최소 높이 설정 */
+            border: 2px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slot-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        #result-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 60%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            text-align: center;
+            width: 100%;
+        }
+
+        .rainbow {
+            background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .orange {
+            color: orange;
+        }
+
+        .red {
+            color: red;
+        }
+
+        .black {
+            color: black;
+        }
+
+        .gif-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 150px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 5px 0;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+        }
+
+        #custom-count {
+            width: 100px;
+            font-size: 14px;
+            padding: 5px;
+            margin-right: 5px;
+        }
+
+        .input-group {
+            margin: 10px 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .delete-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #888;
+        }
+
+        .delete-button:hover {
+            color: #e74c3c;
+        }
+
+        /* 모달 창 스타일 */
+        #items-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            display: none; /* 초기에는 숨김 */
+            z-index: 1000;
+        }
+
+        #items-modal h3 {
+            margin: 0 0 10px;
+            text-align: center;
+        }
+
+        #items-modal .items-list {
+            max-height: 1000px;
+            overflow-y: auto;
+            margin: 10px 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        #items-modal .items-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #items-modal button {
+            display: block;
+            margin: 10px auto 0;
+            padding: 8px 20px;
+            font-size: 14px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #items-modal button:hover {
+            background-color: #0056b3;
+        }
+
+        #new-feature-page {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            justify-content: center; /* 수평 가운데 정렬 */
+            align-items: center; /* 수직 가운데 정렬 */
+            height: 100%; /* 부모 영역(화면 전체)을 채우도록 설정 */
+        }
+
+        .left-section, .right-section {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #f9f9f9;
+            box-sizing: border-box;
+            min-height: 300px; /* 최소 높이 지정 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .left-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 수평 가운데 정렬 */
+            justify-content: center; /* 수직 가운데 정렬 */
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center; /* 수평 가운데 정렬 */
+            /* height 속성 제거 */
+        }
+
+
+        .radio-group label {
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        #resultDisplay {
+            font-size: 32px; /* 폰트 크기 */
+            font-weight: bold; /* 볼드체 */
+            color: #333;
+            margin-top: 20px;
+        }
+
+        /* 결과 종합 페이지 */
+        #summary-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        #resultBox {
+            width: 90%;
+            max-width: 800px;
+            height: 400px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            resize: none;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .controls label {
+            margin: 5px 0;
+        }
+
+        /* 파일 뽑기 영역 */
+        .random-file-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px; /* 버튼과 결과 사이 간격 */
+        }
+
+        /* 결과 표시 스타일 */
+        .result-display {
+            margin-top: 10px;
+            font-size: 30px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+        /* 카운터 표시 영역 */
+        #drawCounterDisplay {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #555;
+        }
+
+        /* 리셋 버튼 스타일 */
+        #resetCounterButton {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #f44336;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #resetCounterButton:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+<!-- 좌측 선택 항목 -->
+<div id="sidebar">
+    <button class="tab-link active" onclick="openTab('roulette-page')">룰렛</button>
+    <button class="tab-link" onclick="openTab('random-file-page')">정가</button>
+    <button class="tab-link" onclick="openTab('new-feature-page')">지정 랜덤</button>
+    <button class="tab-link" onclick="openTab('summary-page')">남은 숙제</button>
+</div>
+
+<!-- 메인 콘텐츠 -->
+<div id="main-content">
+    <!-- 룰렛 페이지 -->
+    <div class="tab active" id="roulette-page">
+        <div id="inputs">
+            <h2>확률</h2>
+            <button id="add-button" onclick="addInput()">항목 추가</button>
+            <button id="show-items-button" onclick="toggleItemsModal()">전체 확률</button>
+            <div id="items-modal" style="display: none;">
+                <h3>전체 확률</h3>
+                <ul id="modal-items-list"></ul>
+                <button onclick="toggleItemsModal()">닫기</button>
+            </div>
+            <div id="input-container"></div>
+            <div class="button-group">
+                <button onclick="startDraw(1)" style="width: 150px;">1번 뽑기</button>
+                <button onclick="startDraw(10)" style="width: 150px;">10번 연속 뽑기</button>
+                <div class="input-group">
+                    <input id="custom-count" min="1" placeholder="개수 입력" type="number">
+                    <button onclick="startCustomDraw()">지정된 개수 뽑기</button>
+                </div>
+            </div>
+            <div class="sticky-buttons">
+                <button onclick="saveItems()">항목 저장</button>
+                <button onclick="clearSavedItems()">저장 초기화</button>
+            </div>
+        </div>
+
+        <div id="slots">
+            <h2>룰렛</h2>
+            <select id="speed-selector" onchange="updateSpeed()">
+                <option value="1">0.5x 속도</option>
+                <option selected value="2">1.0x 속도</option>
+                <option value="4">2.0x 속도</option>
+            </select>
+            <div id="slot-container"></div>
+        </div>
+
+        <div id="results">
+            <h2>결과</h2>
+            <ul id="result-list"></ul>
+            <p id="summary"></p>
+            <button onclick="resetResults()">결과 초기화</button>
+        </div>
+    </div>
+
+    <!-- 지정 뽑기 -->
+    <div class="tab" id="new-feature-page">
+        <div class="left-section">
+            <h2>등급</h2>
+            <div class="radio-group">
+                <label><input name="options" type="radio" value="tr">초월</label>
+                <label><input name="options" type="radio" value="im">불멸</label>
+                <label><input name="options" type="radio" value="et">영원</label>
+                <label><input name="options" type="radio" value="li">제한</label>
+                <label><input name="options" type="radio" value="le">전설</label>
+                <label><input name="options" type="radio" value="hi">히든</label>
+            </div>
+            <button id="selectButton">뽑기</button>
+        </div>
+        <div class="right-section">
+            <h2>결과</h2>
+            <p id="resultDisplay"></p>
+            <div class="counter">뽑은 횟수 : <span id="counterValue">0</span></div>
+            <button id="resetCounter">리셋</button>
+        </div>
+    </div>
+
+    <!-- 결과 종합 페이지 -->
+    <div class="tab" id="summary-page">
+        <h2>결과 종합</h2>
+        <textarea id="resultBox"></textarea>
+        <div class="controls">
+            <div>
+                <label><input checked name="layout" type="radio" value="2"> 2개씩</label>
+                <label><input name="layout" type="radio" value="3"> 3개씩</label>
+                <label><input name="layout" type="radio" value="4"> 4개씩</label>
+                <label><input name="layout" type="radio" value="5"> 5개씩</label>
+            </div>
+            <input id="fileInput" style="display: none;" type="file"/>
+            <div>
+                <button id="loadFileButton">파일 불러오기</button>
+                <button id="saveFileButton">파일 저장</button>
+            </div>
+            <div>
+                <button id="sortAlphabeticallyButton">사전순 정렬</button>
+                <button id="customSortButton">등급순 정렬</button>
+            </div>
+            <button id="sortButton">개수 정렬 + 복사</button>
+        </div>
+    </div>
+
+    <div class="tab" id="random-file-page">
+        <h2>정가 뽑기 / 지우개</h2>
+        <div class="random-file-content">
+            <!-- 결과 표시 -->
+            <div class="result-display" id="fileResultDisplay"></div>
+
+            <!-- 카운터 표시 -->
+            <div class="result-display" id="drawCounterDisplay">뽑은 횟수: 0</div>
+
+            <div>
+                <!-- 뽑기 버튼 -->
+                <button id="fileDrawButton">뽑기</button>
+                <!-- 지우개 버튼 -->
+                <button id="removeRandomItemButton">지우개</button>
+                <!-- 리셋 버튼 -->
+                <button id="resetCounterButton">카운터 초기화</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 기존 JavaScript 코드 유지
+        const inputContainer = document.getElementById("input-container");
+        const slotContainer = document.getElementById("slot-container");
+        const resultList = document.getElementById("result-list");
+        const summary = document.getElementById("summary");
+        const speedSelector = document.getElementById("speed-selector");
+        const results = {};
+        const itemsModal = document.getElementById("items-modal");
+        const modalItemsList = document.getElementById("modal-items-list");
+        // 정렬 기준 설정
+        const sortOrder = [
+            "초월", "불멸", "영원", "제한", "전설", "히든", "변이", "희귀", "특별", "안흔함"
+        ];
+        // 숙제 리스트 하드코딩 데이터
+        const homeworkList = [
+            "황금지우개", "지정지우개", "도우미", "숙제따블~", "파괴왕", "항법랜덤", "올중도", "올하도",
+            "특수함", "블루노안흔함", "후쿠로안흔함", "로빈안흔함", "베포안흔함", "브룩안흔함", "이나즈마안흔함",
+            "우솝안흔함", "타시기안흔함", "쵸파안흔함", "페로나안흔함", "에이스안흔함", "프랑키안흔함", "하찌안흔함",
+            "X드레이크특별", "에넬특별", "모리아특별", "로빈특별", "루치특별", "조로특별", "마르코특별", "루피특별",
+            "쿠마특별", "바질특별", "버기특별", "봉쿠레특별", "상디특별", "스모커특별", "스쿼드특별", "아론특별",
+            "압살롬", "우솝특별", "키드특별", "이나즈마특별", "징베특별", "챠카특별", "갱벳지특별", "캡틴크로특별",
+            "킬러특별함", "쵸파가드특별", "쵸파두뇌특별", "로우특별", "프랑키특별", "에이스특별", "헤르메포특별",
+            "X드레이크희귀", "거프희귀", "도플라밍고희귀", "조로희귀", "검수희귀", "오즈희귀", "마젤란희귀",
+            "모몬가희귀", "루피희귀", "바톨희귀", "바제스희귀", "바질희귀", "반더희귀", "베이비희귀", "벤베크만희귀",
+            "키자루희귀", "브룩희귀", "비비희귀", "사보희귀", "아카희귀", "상디희귀", "샹크스희귀", "센토마루희귀",
+            "슈가희귀", "시류희귀", "와이퍼희귀", "우솝희귀", "키드희귀", "제프희귀", "죠즈희귀", "미호크희귀",
+            "카쿠희귀", "아오희귀", "크로커다일희귀", "킨에몬희귀", "쵸파희귀", "로우희귀", "페로나희귀", "레일리희귀",
+            "이완코브희귀", "히루루크전설", "모리아전설", "에이스전설", "나미전설", "네코마무시전설", "라분전설",
+            "루치전설", "조로전설", "마르코전설", "검수전설", "루나메전설", "루피전설", "드래곤전설", "바톨전설",
+            "핸콕전설", "레이쥬전설", "상디전설", "샹크스전설", "센고쿠전설", "슈가전설", "스모커전설", "시노부전설",
+            "시저전설", "시키전설", "레일리전설", "토키전설", "흰수염전설", "울티전설", "제파전설", "징베전설",
+            "코비전설", "카르가라전설", "킹전설", "로우전설", "후지토라전설", "히루루크전설", "모리아전설",
+            "에이스전설", "나미전설", "네코마무시전설", "라분전설",
+            "루치전설", "조로전설", "마르코전설", "검수전설", "루나메전설", "루피전설", "드래곤전설", "바톨전설",
+            "핸콕전설", "레이쥬전설", "상디전설", "샹크스전설", "센고쿠전설", "슈가전설", "스모커전설", "시노부전설",
+            "시저전설", "시키전설", "레일리전설", "토키전설", "흰수염전설", "울티전설", "제파전설", "징베전설",
+            "코비전설", "카르가라전설", "킹전설", "로우전설", "후지토라전설", "맥심히든", "류마히든", "베르고히든",
+            "레드포스호히든", "레베카히든", "모비딕히든", "발라티에히든", "봉쿠레히든", "사보히든", "써니호히든",
+            "시류히든", "스튜시히든", "아카히든", "이완코브히든", "미호크히든", "캐럿히든", "코알라히든", "키쿠히든",
+            "킬러히든", "페로나히든", "피셔타이거히든", "도플라밍고변이", "베이비변이", "비비변이", "캐럿변이",
+            "맥심히든", "류마히든", "베르고히든", "킬러히든", "페로나히든", "피셔타이거히든",
+            "레드포스호히든", "레베카히든", "모비딕히든", "발라티에히든", "봉쿠레히든", "사보히든", "써니호히든",
+            "시류히든", "스튜시히든", "아카히든", "이완코브히든", "미호크히든", "캐럿히든", "코알라히든", "키쿠히든",
+            "에이스변이", "레베카제한", "카타쿠리제한", "시노부제한", "아인제한", "알비다제한", "에넬제한",
+            "크로커다일제한", "킹제한", "레필제한", "마르코제한", "나미초월", "로빈초월", "타시기초월",
+            "도플라밍고초월", "루치초월", "조로초월", "뱀초월", "검수초월", "루피초월", "바질초월", "키자루초월",
+            "보니초월", "브룩초월", "사보초월", "상디초월", "샹크스초월", "시라호시초월", "아카이누초월", "야마토초월",
+            "우솝초월", "징베초월", "쵸파초월", "아오초월", "키드초월", "로우초월", "프랑키초월", "후지토라초월",
+            "로져불멸", "시키불멸", "거프불멸", "드래곤불멸", "빅맘불멸", "센고쿠불멸", "가반불멸", "레일리불멸",
+            "흰수염불멸", "제트불멸", "카이도우불멸", "비비영원", "버기영원", "핸콕영원", "미호크영원", "오뎅영원",
+            "에이스영원", "카벤딧슈영원", "우타영원", "니카영원", "랜제1", "랜제2", "류마영원", "퀸히든", "카쿠변이"
+        ];
+
+        let animationSpeed = 2;
+        let HW = []; // 결과 저장 배열
+
+        window.onload = () => {
+            const savedItems = JSON.parse(localStorage.getItem("items"));
+            if (savedItems) {
+                savedItems.forEach(item => {
+                    addInput(item.name, item.chance);
+                });
+            }
+        };
+
+        // 초기 로드 시 기본 탭 설정
+        document.addEventListener('DOMContentLoaded', () => {
+            const defaultTabId = 'roulette-page'; // 기본 활성화 탭 ID
+            openTab(defaultTabId); // 기본 탭 활성화
+        });
+
+        // 탭 전환 함수
+        function openTab(tabId) {
+            // 모든 탭 콘텐츠 숨기기
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                tab.style.display = 'none'; // 모든 탭 숨기기
+            });
+
+            // 선택된 탭만 활성화
+            const selectedTab = document.getElementById(tabId);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+                selectedTab.style.display = 'flex'; // 선택된 탭 표시
+            }
+
+            // 모든 버튼 비활성화
+            const tabButtons = document.querySelectorAll('.tab-link');
+            tabButtons.forEach(button => button.classList.remove('active'));
+
+            // 선택된 버튼 활성화
+            const activeButton = document.querySelector(`[onclick="openTab('${tabId}')"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+
+        // 룰렛 페이지 레이아웃 초기화 함수
+        function initializeRoulettePageLayout() {
+            const roulettePage = document.getElementById('roulette-page');
+            roulettePage.style.display = 'flex';
+            roulettePage.style.flexDirection = 'row'; // 가로 배열 유지
+            roulettePage.style.gap = '20px';
+        }
+
+        // 항목 추가
+        function addInput(name = "", chance = "") {
+            const inputGroup = document.createElement("div");
+            inputGroup.className = "input-group";
+            inputGroup.innerHTML = `
+                <input type="text" value="${name}" placeholder="항목 이름" class="item-name">
+                <input type="number" value="${chance}" placeholder="확률 (%)" class="item-chance" min="0" max="100" step="0.00001">
+                <button class="delete-button" onclick="removeInput(this)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            inputContainer.appendChild(inputGroup);
+        }
+
+        // 항목 삭제
+        function removeInput(button) {
+            const inputGroup = button.parentElement;
+            inputGroup.remove();
+        }
+
+        // 모달 창 토글
+        function toggleItemsModal() {
+            if (itemsModal.style.display === "block") {
+                itemsModal.style.display = "none";
+            } else {
+                updateItemsModal(); // 모달 내용 업데이트
+                itemsModal.style.display = "block";
+            }
+        }
+
+        // 모달 창 내용 업데이트
+        function updateItemsModal() {
+            modalItemsList.innerHTML = ""; // 기존 내용 초기화
+            const items = [];
+
+            // 항목 이름과 확률 가져오기
+            document.querySelectorAll(".item-name").forEach((el, index) => {
+                const name = el.value.trim();
+                const chance = parseFloat(document.querySelectorAll(".item-chance")[index].value);
+                if (name && !isNaN(chance)) {
+                    items.push({name, chance});
+                }
+            });
+
+            if (items.length === 0) {
+                modalItemsList.innerHTML = "<li>항목이 없습니다.</li>";
+            } else {
+                items.forEach(item => {
+                    const listItem = document.createElement("li");
+                    listItem.textContent = `${item.name} - ${item.chance}%`;
+                    modalItemsList.appendChild(listItem);
+                });
+            }
+        }
+
+        // 항목 저장
+        function saveItems() {
+            const items = [];
+            document.querySelectorAll(".item-name").forEach((el, index) => {
+                const name = el.value.trim();
+                const chance = document.querySelectorAll(".item-chance")[index].value;
+                if (name && chance) {
+                    items.push({name, chance});
+                }
+            });
+
+            localStorage.setItem("items", JSON.stringify(items));
+        }
+
+        // 저장 초기화
+        function clearSavedItems() {
+            localStorage.removeItem("items");
+        }
+
+        // 속도 업데이트
+        function updateSpeed() {
+            animationSpeed = parseFloat(speedSelector.value);
+        }
+
+        // 결과 초기화
+        function resetResults() {
+            resultList.innerHTML = "";
+            summary.innerHTML = "";
+            slotContainer.innerHTML = "";
+            Object.keys(results).forEach(key => delete results[key]);
+        }
+
+        // 뽑기 시작
+        function startDraw(times) {
+            const items = [];
+            let totalChance = 0;
+
+            document.querySelectorAll(".item-name").forEach((el, index) => {
+                const name = el.value.trim();
+                const chance = parseFloat(document.querySelectorAll(".item-chance")[index].value).toFixed(5);
+                if (name && chance > 0) {
+                    items.push({name, chance: parseFloat(chance)});
+                    totalChance += parseFloat(chance);
+                }
+            });
+
+            if (Math.abs(totalChance - 100) > 0.00001) {
+                alert(`확률 합이 100%가 아닙니다. (현재 합: ${totalChance.toFixed(5)}%)`);
+                return;
+            }
+
+            slotContainer.innerHTML = "";
+
+            for (let i = 0; i < times; i++) {
+                const shuffledItems = shuffleArray([...items]);
+                performSlotAnimation(shuffledItems, i);
+            }
+
+            displaySummary();
+        }
+
+        // 지정된 개수 뽑기
+        function startCustomDraw() {
+            const countInput = document.getElementById("custom-count");
+            const customCount = parseInt(countInput.value, 10);
+
+            if (!customCount || customCount < 1) {
+                alert("올바른 개수를 입력하세요.");
+                return;
+            }
+
+            startDraw(customCount);
+        }
+
+        // 슬롯머신 애니메이션
+        function performSlotAnimation(items, slotIndex) {
+            const slot = document.createElement("div");
+            slot.className = "slot";
+            slotContainer.appendChild(slot);
+
+            const slotContent = document.createElement("div");
+            slotContent.className = "slot-content";
+            slot.appendChild(slotContent);
+
+            let index = 0;
+            const animationInterval = setInterval(() => {
+                const currentItem = items[index % items.length];
+                slotContent.innerText = currentItem.name;
+                slotContent.className = `slot-content ${getColorClass(currentItem.chance)}`;
+                index++;
+            }, 100 / animationSpeed);
+
+            setTimeout(() => {
+                clearInterval(animationInterval);
+
+                const selected = performDraw(items);
+                slot.innerHTML = `
+                    <div class="slot-content ${getColorClass(selected.chance)}">${selected.name}</div>
+                `;
+                displayResult(slot, selected.name, selected.chance);
+            }, (3000 / animationSpeed) + slotIndex * (500 / animationSpeed));
+        }
+
+        // 결과 표시 및 GIF 효과
+        function displayResult(slot, name, chance) {
+            const colorClass = getColorClass(chance); // 확률에 맞는 색상 클래스 가져오기
+            resultList.innerHTML += `<li class="${colorClass}">${name}</li>`; // 결과에 색상 클래스 적용
+            results[name] = (results[name] || 0) + 1;
+
+            if (chance < 10) {
+                const effect = document.createElement("img");
+                effect.src = chance <= 0.1 ? "./img/3.gif" : chance < 1 ? "./img/2.gif" : "./img/1.gif";
+                effect.className = "gif-effect";
+                slot.appendChild(effect);
+
+                setTimeout(() => effect.remove(), 1500);
+            }
+
+            displaySummary();
+        }
+
+        // 결과 합산
+        function displaySummary() {
+            const total = Object.values(results).reduce((acc, count) => acc + count, 0);
+            const itemsSummary = Object.entries(results)
+                .map(([name, count]) => `${name}: ${count}개`)
+                .join("<br>");
+            summary.innerHTML = `총 ${total}개<br><br>${itemsSummary}`;
+        }
+
+        // 배열 섞기
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 확률에 따라 색상 클래스 반환
+        function getColorClass(chance) {
+            if (chance <= 0.1) return "rainbow";
+            if (chance < 1) return "red";
+            if (chance < 10) return "orange";
+            return "black";
+        }
+
+        // 확률에 따라 항목 선택
+        function performDraw(items) {
+            const random = Math.random() * 100;
+            let accumulatedChance = 0;
+
+            for (const item of items) {
+                accumulatedChance += item.chance;
+                if (random < accumulatedChance) {
+                    return item;
+                }
+            }
+        }
+
+        // 하드코딩된 항목 데이터
+        const itemData = {
+            tr: [
+                "나미초월", "로빈초월", "타시기초월", "도플라밍고초월", "루치초월",
+                "조로초월", "뱀초월", "검수초월", "루피초월", "바질초월",
+                "키자루초월", "보니초월", "브룩초월", "사보초월", "상디초월",
+                "샹크스초월", "시라호시초월", "아카이누초월", "야마토초월", "우솝초월",
+                "징베초월", "쵸파초월", "아오초월", "키드초월", "로우초월",
+                "프랑키초월", "후지토라초월"
+            ],
+            im: [
+                "로져불멸", "시키불멸", "거프불멸", "드래곤불멸", "빅맘불멸",
+                "센고쿠불멸", "가반불멸", "레일리불멸", "흰수염불멸", "제트불멸",
+                "카이도우불멸"
+            ],
+            et: [
+                "비비영원", "버기영원", "핸콕영원", "미호크영원", "오뎅영원",
+                "에이스영원", "카벤딧슈영원", "우타영원", "니카영원", "류마영원"
+            ],
+            li: [
+                "레베카제한", "카타쿠리제한", "시노부제한", "아인제한", "알비다제한",
+                "에넬제한", "크로커다일제한", "킹제한", "레필제한", "마르코제한"
+            ],
+            le: [
+                "히루루크전설", "모리아전설", "에이스전설", "나미전설", "네코마무시전설",
+                "라분전설", "루치전설", "조로전설", "마르코전설", "검수전설",
+                "루나메전설", "루피전설", "드래곤전설", "바톨전설", "핸콕전설",
+                "레이쥬전설", "상디전설", "샹크스전설", "센고쿠전설", "슈가전설",
+                "스모커전설", "시노부전설", "시저전설", "시키전설", "레일리전설",
+                "토키전설", "흰수염전설", "울티전설", "제파전설", "징베전설",
+                "코비전설", "카르가라전설", "킹전설", "로우전설", "후지토라전설"
+            ],
+            hi: [
+                "맥심히든", "류마히든", "베르고히든", "레드포스호히든", "레베카히든",
+                "모비딕히든", "발라티에히든", "봉쿠레히든", "사보히든", "써니호히든",
+                "시류히든", "스튜시히든", "아카히든", "이완코브히든", "미호크히든",
+                "캐럿히든", "코알라히든", "키쿠히든", "킬러히든", "페로나히든",
+                "피셔타이거히든", "퀸히든"
+            ]
+        };
+
+        // 버튼 클릭 이벤트
+        let counter = 0; // 카운터 초기값
+
+        // 지정 랜덤 버튼 클릭 이벤트
+        document.getElementById('selectButton').addEventListener('click', () => {
+            const selectedOption = document.querySelector('input[name="options"]:checked');
+            const resultDisplay = document.getElementById('resultDisplay');
+            const resultBox = document.getElementById('resultBox'); // 남은 숙제 탭 텍스트 박스
+
+            if (!selectedOption) {
+                resultDisplay.textContent = '옵션을 선택해주세요.';
+                return;
+            }
+
+            counter++;
+            document.getElementById('counterValue').textContent = counter;
+
+            const items = itemData[selectedOption.value];
+
+            if (!items || items.length === 0) {
+                resultDisplay.textContent = '해당 항목에 데이터가 없습니다.';
+                return;
+            }
+
+            // 랜덤으로 항목 선택
+            const randomItem = items[Math.floor(Math.random() * items.length)];
+
+            // 텍스트 박스 상태를 기준으로 HW 배열 동기화
+            const currentContent = resultBox.value.trim();
+            const itemCounts = currentContent.split(/\s+/).reduce((acc, item) => {
+                const match = item.match(/^(.*?)(?:\*(\d+))?$/);
+                if (match) {
+                    const name = match[1].trim();
+                    const count = parseInt(match[2] || 1, 10);
+                    acc[name] = count;
+                }
+                return acc;
+            }, {});
+
+            // 선택된 항목 추가
+            itemCounts[randomItem] = (itemCounts[randomItem] || 0) + 1;
+
+            // 텍스트 박스 업데이트
+            resultBox.value = Object.entries(itemCounts)
+                .map(([key, count]) => (count > 1 ? `${key}*${count}` : key))
+                .join(' ');
+
+            resultDisplay.textContent = `${randomItem}`;
+        });
+
+        // 초기화 버튼 클릭 이벤트
+        document.getElementById('resetCounter').addEventListener('click', () => {
+            counter = 0;
+            document.getElementById('counterValue').textContent = counter;
+            document.getElementById('resultDisplay').textContent = '';
+        });
+
+        // 결과를 텍스트 박스에 업데이트
+        function updateSummary() {
+            const summary = HW.reduce((acc, item) => {
+                acc[item] = (acc[item] || 0) + 1;
+                return acc;
+            }, {});
+            const resultBox = document.getElementById('resultBox');
+            resultBox.value = Object.entries(summary)
+                .map(([key, count]) => (count > 1 ? `${key}*${count}` : key))
+                .join(' ');
+        }
+
+        // 텍스트 박스 정렬 및 클립보드 복사
+        document.getElementById('sortButton').addEventListener('click', () => {
+            const layout = parseInt(document.querySelector('input[name="layout"]:checked').value, 10); // 선택된 레이아웃
+            const rows = [];
+
+            // 텍스트 박스 내용을 기반으로 배열 생성
+            const currentContent = document.getElementById('resultBox').value.trim();
+            const itemsArray = currentContent.split(/\s+/);
+
+            // *횟수 제거 및 정규화
+            const normalizedItems = itemsArray.map(item => {
+                const match = item.match(/^(.*?)(?:\*(\d+))?$/); // 항목과 *횟수 분리
+                return {name: match[1].trim().toLowerCase(), count: parseInt(match[2] || 1, 10)}; // 이름과 횟수 추출
+            });
+
+            // 중복 항목 누적
+            const itemCounts = normalizedItems.reduce((acc, item) => {
+                acc[item.name] = (acc[item.name] || 0) + item.count; // 중복 항목 누적
+                return acc;
+            }, {});
+
+            // 원본 항목 매핑
+            const originalMap = {};
+            itemsArray.forEach(item => {
+                const key = item.replace(/\*\d+$/, '').trim().toLowerCase();
+                if (!originalMap[key]) {
+                    originalMap[key] = item.replace(/\*\d+$/, ''); // 원본 값 저장
+                }
+            });
+
+            // 정렬된 항목 생성
+            const items = Object.entries(itemCounts).map(
+                ([key, count]) => (count > 1 ? `${originalMap[key]}*${count}` : originalMap[key])
+            );
+
+            // 선택된 레이아웃에 따라 그룹화
+            for (let i = 0; i < items.length; i += layout) {
+                rows.push(items.slice(i, i + layout).join(' '));
+            }
+
+            // 정렬된 결과를 텍스트 박스에 업데이트
+            const resultText = rows.join('\n');
+            document.getElementById('resultBox').value = resultText;
+
+            // 클립보드에 복사
+            navigator.clipboard.writeText(resultText).then(() => {
+            }).catch(err => {
+                alert('클립보드 복사에 실패했습니다: ' + err);
+            });
+        });
+
+        // 파일 저장 버튼
+        document.getElementById('saveFileButton').addEventListener('click', () => {
+            const currentContent = document.getElementById('resultBox').value.trim(); // 텍스트 박스 내용
+            const blob = new Blob([currentContent], {type: 'text/plain'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = '남은 숙제.txt';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        // 파일 불러오기 버튼
+        document.getElementById('loadFileButton').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        // 파일 내용과 HW 배열 동기화
+        document.getElementById('fileInput').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                alert('파일을 선택해주세요.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result.trim();
+                document.getElementById('resultBox').value = content; // 파일 내용을 텍스트 박스에 표시
+                HW = content.split(/\s+/); // 파일 내용을 HW 배열로 변환 (공백으로 구분)
+            };
+            reader.readAsText(file);
+        });
+
+        // 사전순 정렬 버튼 클릭 이벤트
+        document.getElementById('sortAlphabeticallyButton').addEventListener('click', () => {
+            const resultBox = document.getElementById('resultBox'); // 텍스트 박스
+            const currentContent = resultBox.value.trim(); // 현재 텍스트 박스 내용
+
+            if (!currentContent) {
+                alert('정렬할 항목이 없습니다.');
+                return;
+            }
+
+            // 항목 분리 및 정규화
+            const itemsArray = currentContent.split(/\s+/).map(item => {
+                const match = item.match(/^(.*?)(?:\*(\d+))?$/); // 항목과 *횟수 분리
+                return {name: match[1].trim(), count: parseInt(match[2] || 1, 10)};
+            });
+
+            // 사전순 정렬 (한글 기준)
+            itemsArray.sort((a, b) => a.name.localeCompare(b.name, 'ko-KR'));
+
+            // 정렬된 항목 텍스트 박스에 업데이트
+            resultBox.value = itemsArray
+                .map(item => (item.count > 1 ? `${item.name}*${item.count}` : item.name))
+                .join(' ');
+        });
+
+        let drawCounter = 0; // 뽑기 카운터 초기화
+
+        // 뽑기 버튼 클릭 이벤트
+        document.getElementById('fileDrawButton').addEventListener('click', () => {
+            const resultDisplay = document.getElementById('fileResultDisplay');
+            const resultBox = document.getElementById('resultBox'); // 남은 숙제 탭 텍스트 박스
+            const drawCounterDisplay = document.getElementById('drawCounterDisplay');
+
+            // 숙제 리스트에서 랜덤 항목 선택
+            if (homeworkList.length === 0) {
+                resultDisplay.textContent = "항목이 비어 있습니다.";
+                return;
+            }
+
+            const randomItem = homeworkList[Math.floor(Math.random() * homeworkList.length)];
+
+            // 결과 표시
+            resultDisplay.textContent = randomItem;
+
+            // 남은 숙제 탭에 항목 추가
+            const currentContent = resultBox.value.trim();
+            const updatedContent = currentContent
+                ? `${currentContent} ${randomItem}`
+                : randomItem;
+            resultBox.value = updatedContent;
+
+            // 카운터 증가 및 표시
+            drawCounter++;
+            drawCounterDisplay.textContent = `뽑은 횟수: ${drawCounter}`;
+        });
+
+        // 카운터 초기화 버튼 클릭 이벤트
+        document.getElementById('resetCounterButton').addEventListener('click', () => {
+            drawCounter = 0; // 카운터 초기화
+            document.getElementById('drawCounterDisplay').textContent = "뽑은 횟수: 0";
+        });
+
+        document.getElementById('removeRandomItemButton').addEventListener('click', () => {
+            const resultDisplay = document.getElementById('fileResultDisplay');
+            const resultBox = document.getElementById('resultBox'); // "남은 숙제" 탭 텍스트 박스
+            const currentContent = resultBox.value.trim(); // 현재 텍스트 박스 내용
+
+            if (!currentContent) {
+                alert('텍스트 박스가 비어있습니다.');
+                return;
+            }
+
+            // 텍스트 박스의 내용을 항목별로 분리
+            const itemsArray = currentContent.split(/\s+/).map(item => {
+                const match = item.match(/^(.*?)(?:\*(\d+))?$/); // 항목과 *횟수 분리
+                return {name: match[1], count: parseInt(match[2] || 1, 10)};
+            });
+
+            // 무작위 항목 선택
+            const randomIndex = Math.floor(Math.random() * itemsArray.length);
+            const randomItem = itemsArray[randomIndex];
+
+            // 항목 업데이트: 개수가 1개면 삭제, 2개 이상이면 개수를 감소
+            if (randomItem.count > 1) {
+                randomItem.count -= 1;
+            } else {
+                itemsArray.splice(randomIndex, 1); // 배열에서 항목 제거
+            }
+
+            // 텍스트 박스 업데이트
+            resultBox.value = itemsArray
+                .map(item => (item.count > 1 ? `${item.name}*${item.count}` : item.name))
+                .join(' ');
+
+            resultDisplay.textContent = randomItem.name + "(지우기)";
+        });
+
+        // 커스텀 정렬 함수
+        function customSortFunction(a, b) {
+            const regex = /^(.*?)(?:\*(\d+))?$/; // 항목과 *횟수 분리
+            const [, nameA] = a.match(regex);
+            const [, nameB] = b.match(regex);
+
+            // 정렬 기준 단어 추출 (예: '아카히든' → '히든')
+            const categoryA = sortOrder.find(category => nameA.includes(category)) || "";
+            const categoryB = sortOrder.find(category => nameB.includes(category)) || "";
+
+            const indexA = sortOrder.indexOf(categoryA);
+            const indexB = sortOrder.indexOf(categoryB);
+
+            if (indexA === indexB) {
+                return a.localeCompare(b, 'ko-KR'); // 같은 카테고리인 경우 사전순 정렬
+            }
+            return indexA - indexB; // 정렬 순서에 따른 비교
+        }
+
+        // 버튼 클릭 이벤트 추가
+        document.getElementById("customSortButton").addEventListener("click", () => {
+            const resultBox = document.getElementById("resultBox");
+            const currentContent = resultBox.value.trim();
+
+            if (!currentContent) {
+                alert("정렬할 항목이 없습니다.");
+                return;
+            }
+
+            const items = currentContent.split(/\s+/); // 항목 분리
+            items.sort(customSortFunction); // 정렬
+            resultBox.value = items.join(" "); // 정렬 결과 업데이트
+        });
+    </script>
+</div>
+</body>
+</html>
