@@ -389,7 +389,7 @@
         }
 
         /* 카운터 표시 영역 */
-        #drawCounterDisplay {
+        #drawCounterDisplay, #eraseCounterDisplay {
             font-size: 16px;
             font-weight: bold;
             margin-top: 10px;
@@ -517,10 +517,14 @@
         <h2>정가 뽑기 / 지우개</h2>
         <div class="random-file-content">
             <!-- 결과 표시 -->
-            <div class="result-display" id="fileResultDisplay"></div>
+            <div class="result-display" id="fileResultDisplay">4000 / 4400</div>
 
-            <!-- 카운터 표시 -->
-            <div class="result-display" id="drawCounterDisplay">뽑은 횟수: 0</div>
+            <div>
+                <!-- 카운터 표시 -->
+                <div class="result-display" id="drawCounterDisplay">뽑은 횟수: 0</div>
+                <!-- 지우개 카운터 표시 -->
+                <div class="result-display" id="eraseCounterDisplay">지운 횟수: 0</div>
+            </div>
 
             <div>
                 <!-- 뽑기 버튼 -->
@@ -587,8 +591,54 @@
             "에이스영원", "카벤딧슈영원", "우타영원", "니카영원", "랜제1", "랜제2", "류마영원", "퀸히든", "카쿠변이"
         ];
 
+
+        // 하드코딩된 항목 데이터
+        const itemData = {
+            tr: [
+                "나미초월", "로빈초월", "타시기초월", "도플라밍고초월", "루치초월",
+                "조로초월", "뱀초월", "검수초월", "루피초월", "바질초월",
+                "키자루초월", "보니초월", "브룩초월", "사보초월", "상디초월",
+                "샹크스초월", "시라호시초월", "아카이누초월", "야마토초월", "우솝초월",
+                "징베초월", "쵸파초월", "아오초월", "키드초월", "로우초월",
+                "프랑키초월", "후지토라초월"
+            ],
+            im: [
+                "로져불멸", "시키불멸", "거프불멸", "드래곤불멸", "빅맘불멸",
+                "센고쿠불멸", "가반불멸", "레일리불멸", "흰수염불멸", "제트불멸",
+                "카이도우불멸"
+            ],
+            et: [
+                "비비영원", "버기영원", "핸콕영원", "미호크영원", "오뎅영원",
+                "에이스영원", "카벤딧슈영원", "우타영원", "니카영원", "류마영원"
+            ],
+            li: [
+                "레베카제한", "카타쿠리제한", "시노부제한", "아인제한", "알비다제한",
+                "에넬제한", "크로커다일제한", "킹제한", "레필제한", "마르코제한"
+            ],
+            le: [
+                "히루루크전설", "모리아전설", "에이스전설", "나미전설", "네코마무시전설",
+                "라분전설", "루치전설", "조로전설", "마르코전설", "검수전설",
+                "루나메전설", "루피전설", "드래곤전설", "바톨전설", "핸콕전설",
+                "레이쥬전설", "상디전설", "샹크스전설", "센고쿠전설", "슈가전설",
+                "스모커전설", "시노부전설", "시저전설", "시키전설", "레일리전설",
+                "토키전설", "흰수염전설", "울티전설", "제파전설", "징베전설",
+                "코비전설", "카르가라전설", "킹전설", "로우전설", "후지토라전설"
+            ],
+            hi: [
+                "맥심히든", "류마히든", "베르고히든", "레드포스호히든", "레베카히든",
+                "모비딕히든", "발라티에히든", "봉쿠레히든", "사보히든", "써니호히든",
+                "시류히든", "스튜시히든", "아카히든", "이완코브히든", "미호크히든",
+                "캐럿히든", "코알라히든", "키쿠히든", "킬러히든", "페로나히든",
+                "피셔타이거히든", "퀸히든"
+            ]
+        };
+
         let animationSpeed = 2;
         let HW = []; // 결과 저장 배열
+        let gradeCounter = 0; // 지정 랜덤 카운터 초기값
+        let drawCounter = 0; // 뽑기 카운터 초기화
+        let eraseCounter = 0; // 지우개 카운터 초기화
+
 
         window.onload = () => {
             const savedItems = JSON.parse(localStorage.getItem("items"));
@@ -597,6 +647,46 @@
                     addInput(item.name, item.chance);
                 });
             }
+        };
+
+        window.alert = function(message) {
+            // 기존 alert 창이 있으면 제거
+            const existingAlert = document.getElementById('custom-alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            // 새 alert 창 생성
+            const alertBox = document.createElement('div');
+            alertBox.id = 'custom-alert'; // 고유 ID 추가
+            alertBox.style.position = 'fixed';
+            alertBox.style.left = '50%';
+            alertBox.style.top = '50%';
+            alertBox.style.transform = 'translate(-50%, -50%)';
+            alertBox.style.background = '#fff';
+            alertBox.style.padding = '20px';
+            alertBox.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+            alertBox.style.borderRadius = '5px';
+            alertBox.style.zIndex = '1000';
+            alertBox.style.textAlign = 'center'; // 텍스트와 버튼 가운데 정렬
+
+            alertBox.innerHTML = `
+        <p style="margin-bottom: 20px;">${message}</p>
+        <button id="custom-alert-btn" style="
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        ">확인</button>
+    `;
+            document.body.appendChild(alertBox);
+
+            document.getElementById('custom-alert-btn').onclick = function() {
+                document.body.removeChild(alertBox);
+            };
         };
 
         // 초기 로드 시 기본 탭 설정
@@ -855,50 +945,6 @@
             }
         }
 
-        // 하드코딩된 항목 데이터
-        const itemData = {
-            tr: [
-                "나미초월", "로빈초월", "타시기초월", "도플라밍고초월", "루치초월",
-                "조로초월", "뱀초월", "검수초월", "루피초월", "바질초월",
-                "키자루초월", "보니초월", "브룩초월", "사보초월", "상디초월",
-                "샹크스초월", "시라호시초월", "아카이누초월", "야마토초월", "우솝초월",
-                "징베초월", "쵸파초월", "아오초월", "키드초월", "로우초월",
-                "프랑키초월", "후지토라초월"
-            ],
-            im: [
-                "로져불멸", "시키불멸", "거프불멸", "드래곤불멸", "빅맘불멸",
-                "센고쿠불멸", "가반불멸", "레일리불멸", "흰수염불멸", "제트불멸",
-                "카이도우불멸"
-            ],
-            et: [
-                "비비영원", "버기영원", "핸콕영원", "미호크영원", "오뎅영원",
-                "에이스영원", "카벤딧슈영원", "우타영원", "니카영원", "류마영원"
-            ],
-            li: [
-                "레베카제한", "카타쿠리제한", "시노부제한", "아인제한", "알비다제한",
-                "에넬제한", "크로커다일제한", "킹제한", "레필제한", "마르코제한"
-            ],
-            le: [
-                "히루루크전설", "모리아전설", "에이스전설", "나미전설", "네코마무시전설",
-                "라분전설", "루치전설", "조로전설", "마르코전설", "검수전설",
-                "루나메전설", "루피전설", "드래곤전설", "바톨전설", "핸콕전설",
-                "레이쥬전설", "상디전설", "샹크스전설", "센고쿠전설", "슈가전설",
-                "스모커전설", "시노부전설", "시저전설", "시키전설", "레일리전설",
-                "토키전설", "흰수염전설", "울티전설", "제파전설", "징베전설",
-                "코비전설", "카르가라전설", "킹전설", "로우전설", "후지토라전설"
-            ],
-            hi: [
-                "맥심히든", "류마히든", "베르고히든", "레드포스호히든", "레베카히든",
-                "모비딕히든", "발라티에히든", "봉쿠레히든", "사보히든", "써니호히든",
-                "시류히든", "스튜시히든", "아카히든", "이완코브히든", "미호크히든",
-                "캐럿히든", "코알라히든", "키쿠히든", "킬러히든", "페로나히든",
-                "피셔타이거히든", "퀸히든"
-            ]
-        };
-
-        // 버튼 클릭 이벤트
-        let counter = 0; // 카운터 초기값
-
         // 지정 랜덤 버튼 클릭 이벤트
         document.getElementById('selectButton').addEventListener('click', () => {
             const selectedOption = document.querySelector('input[name="options"]:checked');
@@ -910,8 +956,8 @@
                 return;
             }
 
-            counter++;
-            document.getElementById('counterValue').textContent = counter;
+            gradeCounter++;
+            document.getElementById('counterValue').textContent = gradeCounter;
 
             const items = itemData[selectedOption.value];
 
@@ -948,8 +994,8 @@
 
         // 초기화 버튼 클릭 이벤트
         document.getElementById('resetCounter').addEventListener('click', () => {
-            counter = 0;
-            document.getElementById('counterValue').textContent = counter;
+            gradeCounter = 0;
+            document.getElementById('counterValue').textContent = gradeCounter;
             document.getElementById('resultDisplay').textContent = '';
         });
 
@@ -1075,8 +1121,6 @@
                 .join(' ');
         });
 
-        let drawCounter = 0; // 뽑기 카운터 초기화
-
         // 뽑기 버튼 클릭 이벤트
         document.getElementById('fileDrawButton').addEventListener('click', () => {
             const resultDisplay = document.getElementById('fileResultDisplay');
@@ -1106,15 +1150,10 @@
             drawCounterDisplay.textContent = `뽑은 횟수: ${drawCounter}`;
         });
 
-        // 카운터 초기화 버튼 클릭 이벤트
-        document.getElementById('resetCounterButton').addEventListener('click', () => {
-            drawCounter = 0; // 카운터 초기화
-            document.getElementById('drawCounterDisplay').textContent = "뽑은 횟수: 0";
-        });
-
         document.getElementById('removeRandomItemButton').addEventListener('click', () => {
             const resultDisplay = document.getElementById('fileResultDisplay');
             const resultBox = document.getElementById('resultBox'); // "남은 숙제" 탭 텍스트 박스
+            const eraseCounterDisplay = document.getElementById('eraseCounterDisplay');
             const currentContent = resultBox.value.trim(); // 현재 텍스트 박스 내용
 
             if (!currentContent) {
@@ -1145,6 +1184,19 @@
                 .join(' ');
 
             resultDisplay.textContent = randomItem.name + "(지우기)";
+
+            // 카운터 증가 및 표시
+            eraseCounter++;
+            eraseCounterDisplay.textContent = `지운 횟수: ${eraseCounter}`;
+        });
+
+        // 카운터 초기화 버튼 클릭 이벤트
+        document.getElementById('resetCounterButton').addEventListener('click', () => {
+            drawCounter = 0;
+            eraseCounter = 0;
+            document.getElementById('fileResultDisplay').textContent = "4000 / 4400";
+            document.getElementById('drawCounterDisplay').textContent = "뽑은 횟수: 0";
+            document.getElementById('eraseCounterDisplay').textContent = "지운 횟수: 0";
         });
 
         // 커스텀 정렬 함수
