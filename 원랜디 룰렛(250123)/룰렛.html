@@ -505,10 +505,6 @@
                 <button id="loadFileButton">파일 불러오기</button>
                 <button id="saveFileButton">파일 저장</button>
             </div>
-            <div>
-                <button id="sortAlphabeticallyButton">사전순 정렬</button>
-                <button id="customSortButton">등급순 정렬</button>
-            </div>
             <button id="sortButton">개수 정렬 + 복사</button>
         </div>
     </div>
@@ -588,7 +584,8 @@
             "우솝초월", "징베초월", "쵸파초월", "아오초월", "키드초월", "로우초월", "프랑키초월", "후지토라초월",
             "로져불멸", "시키불멸", "거프불멸", "드래곤불멸", "빅맘불멸", "센고쿠불멸", "가반불멸", "레일리불멸",
             "흰수염불멸", "제트불멸", "카이도우불멸", "비비영원", "버기영원", "핸콕영원", "미호크영원", "오뎅영원",
-            "에이스영원", "카벤딧슈영원", "우타영원", "니카영원", "랜제1", "랜제2", "류마영원", "퀸히든", "카쿠변이"
+            "에이스영원", "카벤딧슈영원", "우타영원", "니카영원", "랜제1", "랜제2", "류마영원", "퀸히든", "카쿠변이",
+            "코비초월", "히바리전설", "히바리전설"
         ];
 
 
@@ -600,7 +597,7 @@
                 "키자루초월", "보니초월", "브룩초월", "사보초월", "상디초월",
                 "샹크스초월", "시라호시초월", "아카이누초월", "야마토초월", "우솝초월",
                 "징베초월", "쵸파초월", "아오초월", "키드초월", "로우초월",
-                "프랑키초월", "후지토라초월"
+                "프랑키초월", "후지토라초월", "코비초월"
             ],
             im: [
                 "로져불멸", "시키불멸", "거프불멸", "드래곤불멸", "빅맘불멸",
@@ -622,7 +619,8 @@
                 "레이쥬전설", "상디전설", "샹크스전설", "센고쿠전설", "슈가전설",
                 "스모커전설", "시노부전설", "시저전설", "시키전설", "레일리전설",
                 "토키전설", "흰수염전설", "울티전설", "제파전설", "징베전설",
-                "코비전설", "카르가라전설", "킹전설", "로우전설", "후지토라전설"
+                "코비전설", "카르가라전설", "킹전설", "로우전설", "후지토라전설",
+                "히바리전설"
             ],
             hi: [
                 "맥심히든", "류마히든", "베르고히든", "레드포스호히든", "레베카히든",
@@ -1013,6 +1011,19 @@
 
         // 텍스트 박스 정렬 및 클립보드 복사
         document.getElementById('sortButton').addEventListener('click', () => {
+            const resultBox = document.getElementById("resultBox");
+            const sortedContent = resultBox.value.trim();
+
+            if (!sortedContent) {
+                alert("정렬할 항목이 없습니다.");
+                return;
+            }
+
+            const sortedItems = sortedContent.split(/\s+/);
+            sortedItems.sort(customSortFunction); // 정렬
+            resultBox.value = sortedItems.join(" "); // 정렬 결과 업데이트
+            // 여기까지 정렬
+
             const layout = parseInt(document.querySelector('input[name="layout"]:checked').value, 10); // 선택된 레이아웃
             const rows = [];
 
@@ -1094,31 +1105,6 @@
                 HW = content.split(/\s+/); // 파일 내용을 HW 배열로 변환 (공백으로 구분)
             };
             reader.readAsText(file);
-        });
-
-        // 사전순 정렬 버튼 클릭 이벤트
-        document.getElementById('sortAlphabeticallyButton').addEventListener('click', () => {
-            const resultBox = document.getElementById('resultBox'); // 텍스트 박스
-            const currentContent = resultBox.value.trim(); // 현재 텍스트 박스 내용
-
-            if (!currentContent) {
-                alert('정렬할 항목이 없습니다.');
-                return;
-            }
-
-            // 항목 분리 및 정규화
-            const itemsArray = currentContent.split(/\s+/).map(item => {
-                const match = item.match(/^(.*?)(?:\*(\d+))?$/); // 항목과 *횟수 분리
-                return {name: match[1].trim(), count: parseInt(match[2] || 1, 10)};
-            });
-
-            // 사전순 정렬 (한글 기준)
-            itemsArray.sort((a, b) => a.name.localeCompare(b.name, 'ko-KR'));
-
-            // 정렬된 항목 텍스트 박스에 업데이트
-            resultBox.value = itemsArray
-                .map(item => (item.count > 1 ? `${item.name}*${item.count}` : item.name))
-                .join(' ');
         });
 
         // 뽑기 버튼 클릭 이벤트
@@ -1217,21 +1203,6 @@
             }
             return indexA - indexB; // 정렬 순서에 따른 비교
         }
-
-        // 버튼 클릭 이벤트 추가
-        document.getElementById("customSortButton").addEventListener("click", () => {
-            const resultBox = document.getElementById("resultBox");
-            const currentContent = resultBox.value.trim();
-
-            if (!currentContent) {
-                alert("정렬할 항목이 없습니다.");
-                return;
-            }
-
-            const items = currentContent.split(/\s+/); // 항목 분리
-            items.sort(customSortFunction); // 정렬
-            resultBox.value = items.join(" "); // 정렬 결과 업데이트
-        });
     </script>
 </div>
 </body>
